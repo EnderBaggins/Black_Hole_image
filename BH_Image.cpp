@@ -56,7 +56,7 @@ int main() {
     int screenyres = 100;//800;                     //Num of pixels along the y axis
     double pixels[screenxres][screenyres];          // STAR to let it be allocated dynamically
     
-    for (int i =0;i<screenxres;i++){
+    for (int i =0;i<screenxres;i++){ 
         double x = 2.0*i*screenxlim/screenxres-screenxlim;
         for (int j =0;j<screenyres;j++){
             double y = 2.0*j*screenylim/screenyres-screenylim;

@@ -3,7 +3,7 @@
 #include <vector>
 #include <cmath>
 
-class boyer_lindquist_metric {
+class boyer_lindquist_metric { 
 public:
     boyer_lindquist_metric(double a0, double M0) {
         //Don't need to find a in this section (that is done in the main file) which inputs a here
@@ -31,7 +31,7 @@ public:
         Sigma = (r*r+a*a)*(r*r+a*a) - a*a*Delta*sintheta*sintheta;//checked2
         d_Sigma_dr = 4.0 *r *(r*r+a*a)-a*a*sintheta*sintheta*d_Delta_dr;//fixed something2
         d_Sigma_dtheta = -2.0 * a * a * Delta * sintheta * costheta; //checked2
-        
+
         //Now compute the kerr metric components
         g_00 = -1+2.0 * M * r/rho2; // g_(t,t) //checked
         g_03 = -2.0*M*a*r*sintheta*sintheta/rho2; // g_(t,phi)//checked
