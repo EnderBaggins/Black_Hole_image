@@ -61,6 +61,7 @@ public:
         d_gamma33_dtheta = d_rho2_dtheta/(Sigma*sintheta*sintheta) - rho2/(Sigma*Sigma*sintheta*sintheta)*d_Sigma_dtheta-2.0*rho2/(Sigma*sintheta*sintheta*sintheta)*costheta; // This was my issue just forgot some factors
         
         }
+
     double a, M;
     double rho2, Delta, Sigma; //intermediate variables
     double sintheta, costheta; //intermediate variables of sin and cos that will shorten computation time
