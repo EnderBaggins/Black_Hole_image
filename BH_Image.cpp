@@ -7,10 +7,40 @@
 #include <time.h>
 #include <iomanip>
 #include <omp.h> 
+#include <nlohmann/json.hpp>
 
 int main() {
     clock_t tStart = clock();                //To time the code
 
+    //Loading In the JSON config file
+    std::ifstream i("config.json");
+    nlohmann::json config;
+    i >> config;
+
+    //Setting the parameters from the JSON file
+    std::string savename = config["savename"];       //Name of the file to save the image
+    //Visual Parameters
+    double theta0 = config["theta0"];         // inclination angle of the observer in Degrees
+    int xres = config["xres"];       //Num of pixels along the x axis
+    int yres = config["yres"];       //Num of pixels along the y axis
+
+    //Black Hole Parameters
+    double a = config["a"];                         // Will be my variable a
+    double M = config["M"];                          //unit mass
+    double rin = config["rin"];                      //The inner radii of the accretion disk
+    double rout = config["rout"];                  //The outer radii of the accretion disk
+    double thetathick = config["thetathick"];          //The angular thickness of the disk
+    double radius = M + std::sqrt(M*M-a*a);        //The radius of the black hole
+
+    //Screen parameters
+    double D = config["D"];         //The distance to the screen
+    double xsize = config["xsize"];   //The size of the screen in M distance units
+    double ysize = config["ysize"];
+
+
+
+
+    /*
     std::string savename = "alexBH_Image";       //Name of the file to save the image
     //Black Hole Parameters
     double a = 0.99;                         // Will be my variable a
@@ -26,7 +56,7 @@ int main() {
     int yres = 800;       //Num of pixels along the y axis
     double xsize = 30.0;   //The size of the screen in M distance units
     double ysize = 20;
-
+*/
     //Construct the solver for each thread
     int nthreads = omp_get_max_threads();
     std::cout << "number of threads: " << nthreads << std::endl;
@@ -40,17 +70,17 @@ int main() {
     }
 
     double BH_rad_mod = 1.01;              // I needed this otherwise would take forever to run (I think that the step size as nearing horizon becomes infinitely small)
-    double accretion_angle_mod = 0.01;     // additive modulator (aka how thick the disk is)
+    //double accretion_angle_mod = 0.01;     // additive modulator (aka how thick the disk is)
     
     //Stop condition of the photon path
     auto stop = [&D,&radius,&rout,&rin,
-                 &BH_rad_mod,&accretion_angle_mod]
+                 &BH_rad_mod,&thetathick]
                 (double t, const std::vector<double> &y) {
         bool toofar = y[0] >= D+1;                          // when distance bewteen photon and BH is greater than screen
         bool tooclose = y[0]<= radius*BH_rad_mod;           //when photon is inside the black hole
         bool hitaccresion = y[0] <= rout && y[0] >= rin     //when photon hits the accretion disk
-                         && y[1] <= M_PI/2.0+accretion_angle_mod 
-                         && y[1] >= M_PI/2.0-accretion_angle_mod;
+                         && y[1] <= M_PI/2.0+thetathick 
+                         && y[1] >= M_PI/2.0-thetathick;
         
         return toofar or tooclose or hitaccresion; 
     };//end of stop
@@ -116,8 +146,8 @@ int main() {
             }
                                     // if the photon hits the accretion disk
             else if (finalpos[0] <= rout && finalpos[0] >= rin 
-                  && finalpos[1] <= M_PI/2.0 + accretion_angle_mod 
-                  && finalpos[1] >= M_PI/2.0 - accretion_angle_mod){
+                  && finalpos[1] <= M_PI/2.0 + thetathick 
+                  && finalpos[1] >= M_PI/2.0 - thetathick){
                 
                 
                 // Calculating the brightness of the pixel
@@ -146,6 +176,21 @@ int main() {
     std::ostringstream filepath;
     filepath << "Output_files/" << savename << ".csv";
     std::ofstream output_file(filepath.str());
+    // Save configuration information
+output_file << "Configuration:\n";
+output_file << "savename: " << savename << "\n";
+output_file << "theta0: " << theta0 << "\n";
+output_file << "xres: " << xres << "\n";
+output_file << "yres: " << yres << "\n";
+output_file << "a: " << a << "\n";
+output_file << "M: " << M << "\n";
+output_file << "rin: " << rin << "\n";
+output_file << "rout: " << rout << "\n";
+output_file << "thetathick: " << thetathick << "\n";
+output_file << "D: " << D << "\n";
+output_file << "xsize: " << xsize << "\n";
+output_file << "ysize: " << ysize << "\n\n"; // Two newlines to separate config from data
+    // Save the pixel data
     for (int i = 0; i < xres; i++) {// Saves as transposed matrix (just data.transpose() in python)
         output_file << pixels[i][0];
         for (int j = 1; j < yres; j++){
