@@ -117,23 +117,8 @@ int main() {
             double muphi = std::sin(beta)*std::cos(alpha)*std::sqrt(metric.g_33);
             std::vector<double> y0 = {r, theta, phi, mur, mutheta, muphi};
             
-
-        auto dydt = [&metric] (double t, const std::vector<double> &y) {
-        //Compute the metric
-
-        metric.compute_metric(y[0], y[1]); // y[0] = r, y[1] = theta
-        //finding the upper mu_t
-        double mu_t_upper = std::sqrt(metric.gamma11 * y[3] * y[3] + metric.gamma22 * y[4] * y[4] + metric.gamma33 * y[5] * y[5])/metric.alpha;
-        
-        double dr_dt = metric.gamma11 * y[3] / mu_t_upper; //Checked
-        double dtheta_dt = metric.gamma22 * y[4] / mu_t_upper; //Checked
-        double dphi_dt = metric.gamma33 * y[5] / mu_t_upper - metric.beta3; //checked
-        double dmur_dt = -metric.alpha*mu_t_upper*metric.d_alpha_dr + y[5]*metric.d_beta3_dr - 1/(2.0*mu_t_upper)*(y[3]*y[3]*metric.d_gamma11_dr + y[4]*y[4]*metric.d_gamma22_dr + y[5]*y[5]*metric.d_gamma33_dr); //checked
-        double dmutheta_dt = -metric.alpha*mu_t_upper*metric.d_alpha_dtheta + y[5]*metric.d_beta3_dtheta - 1/(2.0*mu_t_upper)*(y[3]*y[3]*metric.d_gamma11_dtheta + y[4]*y[4]*metric.d_gamma22_dtheta + y[5]*y[5]*metric.d_gamma33_dtheta);//checked
-
-        return std::vector<double> {dr_dt, dtheta_dt, dphi_dt, dmur_dt, dmutheta_dt,0.0}; // last element is zero since d muphi/dt = 0
-        };//end of dydt
-
+            auto dydt = make_dydt(metric);
+            
             //integrating the pixel until the stop condition
             integrator_v[thread_id].integrate(dydt, stop, 0.01, 0.0, y0);
             auto finalpos = integrator_v[thread_id].result.back();

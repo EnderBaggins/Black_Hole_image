@@ -3,6 +3,31 @@
 #include <vector>
 #include <cmath>
 
+//The Equation of motion for Photons in Kerr Spacetime
+template <typename MetricType>
+auto make_dydt(MetricType &metric) { //Makes the dydt function for whatever metric is inputted
+    return [&metric] (double t, const std::vector<double> &y) {
+        //Compute the metric
+
+        metric.compute_metric(y[0], y[1]); // y[0] = r, y[1] = theta
+        //finding the upper mu_t
+        double mu_t_upper = std::sqrt(metric.gamma11 * y[3] * y[3] 
+                                    + metric.gamma22 * y[4] * y[4] 
+                                    + metric.gamma33 * y[5] * y[5])/metric.alpha;
+        
+        double dr_dt = metric.gamma11 * y[3] / mu_t_upper; //Checked
+        double dtheta_dt = metric.gamma22 * y[4] / mu_t_upper; //Checked
+        double dphi_dt = metric.gamma33 * y[5] / mu_t_upper - metric.beta3; //checked
+        double dmur_dt = -metric.alpha*mu_t_upper*metric.d_alpha_dr + y[5]*metric.d_beta3_dr 
+                        - 1/(2.0*mu_t_upper)*(y[3]*y[3]*metric.d_gamma11_dr + y[4]*y[4]*metric.d_gamma22_dr + y[5]*y[5]*metric.d_gamma33_dr); //checked
+                        
+        double dmutheta_dt = -metric.alpha*mu_t_upper*metric.d_alpha_dtheta + y[5]*metric.d_beta3_dtheta 
+                             - 1/(2.0*mu_t_upper)*(y[3]*y[3]*metric.d_gamma11_dtheta + y[4]*y[4]*metric.d_gamma22_dtheta + y[5]*y[5]*metric.d_gamma33_dtheta);//checked
+
+        return std::vector<double> {dr_dt, dtheta_dt, dphi_dt, dmur_dt, dmutheta_dt,0.0}; // last element is zero since d muphi/dt = 0
+        };//end of dydt
+}
+
 class boyer_lindquist_metric { 
 public:
     boyer_lindquist_metric(double a0, double M0) {
